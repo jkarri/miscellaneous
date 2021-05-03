@@ -1,40 +1,28 @@
 package com.jk.codetest.fixedincome;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
+import java.util.concurrent.CountDownLatch;
 
 public class TradeTickProducer extends Thread {
     public static String[] SYMBOLS = new String[] { "ABC", "XYZ", "AAPL", "AMZN", "MSFT", "GOOG", "BRK.A", "BRK.B" };
     private Random random = new Random();
     private static String[] STATUS = new String[] {"X", "Y", "Z", "A", "C"};
 
-    private List<TradeTick> tradeTicks = new ArrayList<>();
     private TradingRepository tradingRepository;
+    private CountDownLatch countDownLatch;
 
-    public TradeTickProducer(TradingRepository tradingRepository) {
+    public TradeTickProducer(TradingRepository tradingRepository, CountDownLatch countDownLatch) {
         this.tradingRepository = tradingRepository;
+        this.countDownLatch = countDownLatch;
     }
 
     @Override
     public void run() {
-        int i = 0;
-        while (i < 100) {
-            if (Thread.currentThread().isInterrupted()) {
-                System.out.println("Producer interrupted, exiting now...");
-            }
-            try {
-                Thread.sleep(10);
-            } catch (InterruptedException e) {
-
-            }
-            TradeTick tradeTick = generateTradeTick();
-//            System.out.println("Generating trade tick " + tradeTick);
-            tradeTicks.add(tradeTick);
-            tradingRepository.addTradeTick(tradeTick);
-            i++;
-        }
+//        System.out.println("Producing...");
+        TradeTick tradeTick = generateTradeTick();
+        tradingRepository.addTradeTick(tradeTick);
+        countDownLatch.countDown();
     }
 
     private TradeTick generateTradeTick() {
@@ -46,7 +34,4 @@ public class TradeTickProducer extends Thread {
         return new TradeTick(symbol, price, random.nextInt(1000), status, System.currentTimeMillis());
     }
 
-    public List<TradeTick> getAllTradeTicks() {
-        return tradeTicks;
-    }
 }

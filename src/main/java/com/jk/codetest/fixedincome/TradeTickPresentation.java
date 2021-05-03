@@ -12,15 +12,8 @@ public class TradeTickPresentation extends Thread {
 
     @Override
     public void run() {
-        while (true) {
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-            }
-            System.out.println("All trades with max values");
-            Arrays.stream(TradeTickProducer.SYMBOLS)
-                            .forEach(symbol -> System.out.println(symbol + " - " + tradingRepository.getLargestTrade(symbol)));
-
-        }
+        System.out.println("All trades with max values");
+        Arrays.stream(TradeTickProducer.SYMBOLS)
+                        .forEach(symbol -> System.out.println(symbol + " - " + tradingRepository.getLargestTrade(symbol)));
     }
 }

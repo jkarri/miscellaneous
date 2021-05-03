@@ -1,6 +1,8 @@
 package com.jk.codetest.fixedincome;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -8,6 +10,8 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class TradingRepository {
+    private List<TradeTick> allTradeTicks = new ArrayList<>();
+
     private BlockingQueue<TradeTick> tradeTicks = new LinkedBlockingQueue<>();
     private Map<String, TradeTick> simpleMap;
     private final ConcurrentMap<String, TradeTick> largestTrade;
@@ -19,6 +23,7 @@ public class TradingRepository {
 
     public void addTradeTick(TradeTick tradeTick) {
         tradeTicks.offer(tradeTick);
+        allTradeTicks.add(tradeTick);
     }
 
     public synchronized void processTraceTickSerially() {
@@ -55,7 +60,6 @@ public class TradingRepository {
                 }
             });
         } catch (InterruptedException e) {
-
         }
     }
 
@@ -63,4 +67,9 @@ public class TradingRepository {
 //        return simpleMap.get(symbol);
         return largestTrade.get(symbol);
     }
+
+    public List<TradeTick> getAllTradeTicks() {
+        return allTradeTicks;
+    }
+
 }
