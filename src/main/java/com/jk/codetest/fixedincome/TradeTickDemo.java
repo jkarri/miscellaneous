@@ -4,29 +4,28 @@ import java.util.Comparator;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 public class TradeTickDemo {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
         TradingRepository tradingRepository = new TradingRepository();
         int numberOfRequests = 100;
 
         CountDownLatch producerLatch = new CountDownLatch(numberOfRequests);
         CountDownLatch consumerLatch = new CountDownLatch(numberOfRequests);
+        ExecutorService service = Executors.newFixedThreadPool(10);
 
-        TradeTickProducer tradeTickProducer = new TradeTickProducer(tradingRepository, producerLatch);
-        TradeTickConsumer tradeTickConsumer = new TradeTickConsumer(tradingRepository, consumerLatch);
         TradeTickPresentation tradeTickPresentation = new TradeTickPresentation(tradingRepository);
 
-        // TODO change this
-        tradeTickProducer.start();
-        tradeTickConsumer.start();
-        tradeTickPresentation.start();
-        try {
-            tradeTickProducer.join();
-        } catch (InterruptedException e) {
+        for (int i = 0; i < numberOfRequests; i++) {
+            service.execute(new TradeTickProducer(tradingRepository, producerLatch));
+            service.execute(new TradeTickConsumer(tradingRepository, consumerLatch));
         }
-
+        producerLatch.await();
+        consumerLatch.await();
+        tradeTickPresentation.start();
 
         System.out.println("Total number of trade ticks generated " + tradingRepository.getAllTradeTicks().size());
         System.out.println("All trades with max values");

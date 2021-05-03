@@ -24,7 +24,7 @@ public class TradeTickConcurrencyTest {
         TradingRepository tradingRepository = new TradingRepository();
         TradeTickPresentation tradeTickPresentation = new TradeTickPresentation(tradingRepository);
 
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < numberOfRequests; i++) {
             service.execute(new TradeTickProducer(tradingRepository, producerLatch));
             service.execute(new TradeTickConsumer(tradingRepository, consumerLatch));
         }
