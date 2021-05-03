@@ -17,7 +17,7 @@ public class TradeTickConcurrencyTest {
     @Test
     public void testCounterWithConcurrency() throws InterruptedException {
         ExecutorService service = Executors.newFixedThreadPool(10);
-        int numberOfRequests = 100;
+        int numberOfRequests = 10000;
         CountDownLatch producerLatch = new CountDownLatch(numberOfRequests);
         CountDownLatch consumerLatch = new CountDownLatch(numberOfRequests);
 

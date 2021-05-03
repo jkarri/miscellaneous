@@ -10,7 +10,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class TradingRepository {
-    private List<TradeTick> allTradeTicks = new ArrayList<>();
+    private BlockingQueue<TradeTick> allTradeTicks = new LinkedBlockingQueue<>();
 
     private BlockingQueue<TradeTick> tradeTicks = new LinkedBlockingQueue<>();
     private Map<String, TradeTick> simpleMap;
@@ -23,7 +23,7 @@ public class TradingRepository {
 
     public void addTradeTick(TradeTick tradeTick) {
         tradeTicks.offer(tradeTick);
-        allTradeTicks.add(tradeTick);
+        allTradeTicks.offer(tradeTick);
     }
 
     public synchronized void processTraceTickSerially() {
@@ -69,7 +69,9 @@ public class TradingRepository {
     }
 
     public List<TradeTick> getAllTradeTicks() {
-        return allTradeTicks;
+        List<TradeTick> allTrades = new ArrayList<>();
+        allTradeTicks.drainTo(allTrades);
+        return allTrades;
     }
 
 }
