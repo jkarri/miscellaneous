@@ -5,6 +5,7 @@ import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 
 public class TradeTickProducer extends Thread {
+//    public static String[] SYMBOLS = new String[] { "ABC"};
     public static String[] SYMBOLS = new String[] { "ABC", "XYZ", "AAPL", "AMZN", "MSFT", "GOOG", "BRK.A", "BRK.B" };
     private Random random = new Random();
     private static String[] STATUS = new String[] {"X", "Y", "Z", "A", "C"};

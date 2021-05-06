@@ -1,5 +1,7 @@
 package com.jk.codetest.fixedincome;
 
+import java.math.BigDecimal;
+import java.math.MathContext;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -8,6 +10,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.LongAdder;
 
 public class TradingRepository {
     private BlockingQueue<TradeTick> allTradeTicks = new LinkedBlockingQueue<>();
@@ -15,10 +18,12 @@ public class TradingRepository {
     private BlockingQueue<TradeTick> tradeTicks = new LinkedBlockingQueue<>();
     private Map<String, TradeTick> simpleMap;
     private final ConcurrentMap<String, TradeTick> largestTrade;
+    private final ConcurrentMap<String, TradeAverage> tradeAverage;
 
     public TradingRepository() {
         simpleMap = new HashMap<>();
         largestTrade = new ConcurrentHashMap<>();
+        tradeAverage = new ConcurrentHashMap<>();
     }
 
     public void addTradeTick(TradeTick tradeTick) {
@@ -45,7 +50,7 @@ public class TradingRepository {
 
     public void processTradeTickGracefully() {
         try {
-            TradeTick tradeTick = tradeTicks.take();
+            final TradeTick tradeTick = tradeTicks.take();
             largestTrade.merge(tradeTick.getSymbol(), tradeTick, (t1, t2) -> {
                 if (t1 == null) {
                     return t2;
@@ -58,6 +63,23 @@ public class TradingRepository {
                         return t1;
                     }
                 }
+            });
+            tradeAverage.compute(tradeTick.getSymbol(), (symbol, tradeAverage) -> {
+                if (tradeAverage == null) {
+                    LongAdder longAdder = new LongAdder();
+                    longAdder.increment();
+                    return new TradeAverage(tradeTick.getPrice(), longAdder);
+                }
+                LongAdder count = tradeAverage.getCount();
+                BigDecimal average = tradeAverage.getAverage();
+                BigDecimal currentSum = average.multiply(new BigDecimal(count.longValue()), MathContext.DECIMAL32).add(tradeTick.getPrice());
+                count.increment();
+                BigDecimal newAverage = currentSum.divide(new BigDecimal(count.longValue()), MathContext.DECIMAL32);
+//                System.out.println("Count is " + count.longValue());
+//                System.out.println("Average is " + average.setScale(5, BigDecimal.ROUND_HALF_EVEN));
+//                System.out.println("Price is " + tradeTick.getPrice().setScale(5, BigDecimal.ROUND_HALF_EVEN));
+//                System.out.println("New Average is " + newAverage.setScale(5, BigDecimal.ROUND_HALF_EVEN));
+                return new TradeAverage(newAverage, count);
             });
         } catch (InterruptedException e) {
         }
@@ -74,4 +96,7 @@ public class TradingRepository {
         return allTrades;
     }
 
+    public TradeAverage getTradeAverage(String symbol) {
+        return tradeAverage.get(symbol);
+    }
 }
